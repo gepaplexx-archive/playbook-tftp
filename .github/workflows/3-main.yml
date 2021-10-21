@@ -1,0 +1,91 @@
+---
+name: Main
+
+'on':
+  repository_dispatch:
+  push:
+    branches:
+      - main
+    tags-ignore:
+      - '**'
+
+jobs:
+  ansible-linter:
+    name: Ansible Linter
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set up Python 3
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install ansible-lint Dependencies
+        run: pip3 install ansible ansible-base ansible-lint
+
+      - name: Lint Code Base with ansible-lint
+        run: ansible-lint
+
+  yaml-linter:
+    name: YAML Linter
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set up Python 3
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install yamllint Dependencies
+        run: pip3 install yamllint
+
+      - name: Lint Code Base with yamllint
+        run: yamllint .
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set up Python 3
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+
+      - name: Install python Dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install ansible Dependencies
+        run: ansible-galaxy role install -r roles/requirements.yml
+
+      - name: Run Playbook
+        run: >-
+          ansible-playbook -i hosts playbook.yml
+        env:
+          PY_COLORS: 1
+          ANSIBLE_FORCE_COLOR: 1
+
+  notify:
+    name: Slack Notifications
+    runs-on: ubuntu-latest
+    if: ${{ failure() }}
+    needs:
+      - ansible-linter
+      - yaml-linter
+      - test
+    steps:
+      - name: Notify Slack channel on failure
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_ICON: https://github.com/ckaserer/logos/raw/master/ansible.png
+          SLACK_USERNAME: ${{ github.repository }}
+          SLACK_COLOR: '#ff0033'
+          SLACK_FOOTER: ''
+...
