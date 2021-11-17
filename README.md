@@ -32,6 +32,6 @@ For more relevant documentation on TFTP, see:
 
 MIT
 
-## Contributions:
+## Contributions
 
 - [@ckaserer](https://github.com/ckaserer)
