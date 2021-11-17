@@ -1,8 +1,6 @@
 ---
-- name: tftp
-  hosts:
-    - all
-  become: true
+- name: Install TFTP
+  hosts: all
   roles:
     - role: gepaplexx.tftp
 ...
